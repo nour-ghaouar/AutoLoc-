@@ -1,9 +1,13 @@
 package tn.esprit.autolocapi.domain;
 
 import jakarta.persistence.*;
-        import lombok.*;
+import lombok.*;
+import java.time.LocalDate;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.CascadeType;
 
-        import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "client")
@@ -23,4 +27,10 @@ public class Client {
     private String telephone;
     private String numPermis;
     private LocalDate dateInscription;
+
+    @OneToMany(
+            mappedBy = "client",
+            cascade = CascadeType.PERSIST
+    )
+    private List<Reservation> reservations = new ArrayList<>();
 }
