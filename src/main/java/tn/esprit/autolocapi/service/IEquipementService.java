@@ -1,15 +1,18 @@
 package tn.esprit.autolocapi.service;
 
 import tn.esprit.autolocapi.domain.Equipement;
+
 import java.util.List;
 
 public interface IEquipementService {
 
-    Equipement addEquipement(Equipement equipement);
+    Equipement create(Equipement equipement);
 
-    List<Equipement> getAllEquipements();
+    Equipement findById(Long id);
 
-    Equipement getEquipementById(Long id);
+    List<Equipement> findAll();
 
-    void deleteEquipement(Long id);
+    Equipement update(Long id, Equipement equipement);
+
+    void deleteById(Long id);
 }
