@@ -2,73 +2,119 @@ package tn.esprit.autolocapi.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import tn.esprit.autolocapi.domain.Agence;
 import tn.esprit.autolocapi.domain.Employe;
 import tn.esprit.autolocapi.exception.ResourceNotFoundException;
+import tn.esprit.autolocapi.mapper.EmployeMapper;
+import tn.esprit.autolocapi.repository.IAgenceRepository;
 import tn.esprit.autolocapi.repository.IEmployeRepository;
+import tn.esprit.autolocapi.web.dto.EmployeDTO;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class EmployeServiceImpl implements IEmployeService {
+public class EmployeServiceImpl
+        implements IEmployeService {
 
     private final IEmployeRepository employeRepository;
+    private final IAgenceRepository agenceRepository;
+    private final EmployeMapper employeMapper;
 
     @Override
-    public Employe create(Employe employe) {
+    public EmployeDTO create(
+            EmployeDTO dto) {
 
-        if (employe.getIdEmploye() != null) {
+        if (dto.idEmploye() != null) {
             throw new IllegalArgumentException(
                     "Un nouvel employé ne doit pas avoir d'identifiant"
             );
         }
 
-        validateEmploye(employe);
+        Employe employe =
+                employeMapper.toEntity(dto);
 
-        return employeRepository.save(employe);
+        employe.setAgence(
+                getAgence(dto.agenceId())
+        );
+
+        employe =
+                employeRepository.save(employe);
+
+        return employeMapper.toDTO(employe);
     }
 
     @Override
-    public Employe findById(Long id) {
-        return employeRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Employe", id));
+    public EmployeDTO findById(Long id) {
+
+        return employeMapper.toDTO(
+                getEmploye(id)
+        );
     }
 
     @Override
-    public List<Employe> findAll() {
-        return employeRepository.findAll();
+    public List<EmployeDTO> findAll() {
+
+        return employeRepository
+                .findAll()
+                .stream()
+                .map(employeMapper::toDTO)
+                .toList();
     }
 
     @Override
-    public Employe update(Long id, Employe employe) {
+    public EmployeDTO update(
+            Long id,
+            EmployeDTO dto) {
 
-        Employe existing = findById(id);
+        Employe employe =
+                getEmploye(id);
 
-        validateEmploye(employe);
+        employeMapper.updateEntity(
+                dto,
+                employe
+        );
 
-        existing.setNom(employe.getNom());
-        existing.setPrenom(employe.getPrenom());
-        existing.setRole(employe.getRole());
+        employe.setAgence(
+                getAgence(dto.agenceId())
+        );
 
-        return employeRepository.save(existing);
+        employe =
+                employeRepository.save(employe);
+
+        return employeMapper.toDTO(employe);
     }
 
     @Override
     public void deleteById(Long id) {
 
         if (!employeRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Employe", id);
+            throw new ResourceNotFoundException(
+                    "Employe",
+                    id
+            );
         }
 
         employeRepository.deleteById(id);
     }
 
-    private void validateEmploye(Employe employe) {
-        if (employe.getNom() == null || employe.getNom().isBlank()) {
-            throw new IllegalArgumentException(
-                    "Le nom de l'employé est obligatoire"
-            );
-        }
+    private Employe getEmploye(Long id) {
+
+        return employeRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Employe",
+                                id
+                        ));
+    }
+
+    private Agence getAgence(Long id) {
+
+        return agenceRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Agence",
+                                id
+                        ));
     }
 }
